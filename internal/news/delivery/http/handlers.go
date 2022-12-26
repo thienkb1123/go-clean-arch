@@ -105,7 +105,7 @@ func (h newsHandlers) GetByID(c *fiber.Ctx) error {
 		return c.Status(status).JSON(err)
 	}
 
-	ctx := c.Context()
+	ctx := c.UserContext()
 	newsByID, err := h.newsUC.GetNewsByID(ctx, newsUUID)
 	if err != nil {
 		utils.LogResponseError(c, h.logger, err)
@@ -162,7 +162,7 @@ func (h newsHandlers) GetNews(c *fiber.Ctx) error {
 		return c.Status(status).JSON(err)
 	}
 
-	ctx := c.Context()
+	ctx := c.UserContext()
 	newsList, err := h.newsUC.GetNews(ctx, pq)
 	if err != nil {
 		utils.LogResponseError(c, h.logger, err)

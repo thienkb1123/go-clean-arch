@@ -19,9 +19,10 @@ import (
 func (mw *MiddlewareManager) AuthJWTMiddleware() fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		tokenString := c.Get(fiber.HeaderAuthorization)
-		mw.logger.Infof("auth middleware header %s", tokenString)
+		ctx := c.UserContext()
+		mw.logger.Infof(ctx, "auth middleware header %s", tokenString)
 		if err := mw.validateJWTToken(tokenString, c, mw.cfg); err != nil {
-			mw.logger.Error("middleware validateJWTToken", zap.String("headerJWT", err.Error()))
+			mw.logger.Error(ctx, "middleware validateJWTToken", zap.String("headerJWT", err.Error()))
 			return c.Status(http.StatusUnauthorized).JSON(errors.NewUnauthorizedError(errors.Unauthorized))
 		}
 
@@ -64,7 +65,7 @@ func (mw *MiddlewareManager) validateJWTToken(tokenString string, c *fiber.Ctx, 
 			UserID: userUUID,
 		}
 
-		ctx := context.WithValue(c.Context(), utils.UserCtxKey{}, user)
+		ctx := context.WithValue(c.UserContext(), utils.UserCtxKey{}, user)
 		c.SetUserContext(ctx)
 	}
 	return nil

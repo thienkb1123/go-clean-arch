@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 
 	"github.com/thienkb1123/go-clean-arch/config"
@@ -24,19 +25,20 @@ func main() {
 
 	// fmt.Println("token: ", token)
 
+	ctx := context.Background()
 	appLogger := logger.NewApiLogger(cfg)
 	appLogger.InitLogger()
-	appLogger.Infof("AppVersion: %s, LogLevel: %s, Mode: %s", cfg.Server.AppVersion, cfg.Logger.Level, cfg.Server.Mode)
+	appLogger.Infof(ctx, "AppVersion: %s, LogLevel: %s, Mode: %s", cfg.Server.AppVersion, cfg.Logger.Level, cfg.Server.Mode)
 
 	// Repository
 	mysqlDB, err := mysql.New(&cfg.MySQL)
 	if err != nil {
-		appLogger.Fatalf("MySQL init: %s", err)
+		appLogger.Fatalf(ctx, "MySQL init: %s", err)
 	}
 
 	rdb, err := redis.NewClient(&cfg.Redis)
 	if err != nil {
-		appLogger.Fatalf("RedisCluster init: %s", err)
+		appLogger.Fatalf(ctx, "RedisCluster init: %s", err)
 	}
 
 	s := server.NewServer(
