@@ -67,7 +67,7 @@ func (r *newsRepo) Delete(ctx context.Context, newsID uuid.UUID) error {
 // Get news
 func (r *newsRepo) GetNews(ctx context.Context, pq *utils.PaginationQuery) (*models.NewsList, error) {
 	totalCount := int64(0)
-	db := r.db.Model(&models.News{})
+	db := r.db.WithContext(ctx).Model(&models.News{})
 	db.Count(&totalCount)
 
 	if totalCount == 0 {
@@ -82,7 +82,7 @@ func (r *newsRepo) GetNews(ctx context.Context, pq *utils.PaginationQuery) (*mod
 	}
 
 	newsList := make([]*models.News, 0, pq.GetSize())
-	err := db.Offset(pq.GetOffset()).Limit(pq.GetLimit()).Find(newsList).Error
+	err := db.Offset(pq.GetOffset()).Limit(pq.GetLimit()).Find(&newsList).Error
 	if err != nil {
 		return nil, err
 	}

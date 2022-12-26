@@ -1,6 +1,8 @@
 package server
 
 import (
+	"context"
+
 	"github.com/gofiber/fiber/v2/middleware/requestid"
 	apiMiddlewares "github.com/thienkb1123/go-clean-arch/internal/middleware"
 	newsHttp "github.com/thienkb1123/go-clean-arch/internal/news/delivery/http"
@@ -11,11 +13,13 @@ import (
 
 // Map Server Handlers
 func (s *Server) MapHandlers() error {
+	ctx := context.Background()
 	metrics, err := metric.CreateMetrics(s.cfg.Metrics.URL, s.cfg.Metrics.ServiceName)
 	if err != nil {
-		s.logger.Errorf("CreateMetrics Error: %s", err)
+		s.logger.Errorf(ctx, "CreateMetrics Error: %s", err)
 	}
 	s.logger.Info(
+		ctx,
 		"Metrics available URL: %s, ServiceName: %s",
 		s.cfg.Metrics.URL,
 		s.cfg.Metrics.ServiceName,
@@ -35,14 +39,9 @@ func (s *Server) MapHandlers() error {
 
 	mw := apiMiddlewares.NewMiddlewareManager(s.cfg, []string{"*"}, s.logger)
 
-	// s.gin.Use(metric.RecordMetrics("go-clean-arch", []string{"metrics", "readiness"}))
-
-	// v1 := s.gin.Group("/api/v1")
-
-	// newsGroup := v1.Group("/news")
-
 	s.fiber.Use(requestid.New())
 	s.fiber.Use(mw.MetricsMiddleware(metrics))
+	s.fiber.Use(mw.LoggerMiddleware(s.logger))
 
 	v1 := s.fiber.Group("/api/v1")
 	newsGroup := v1.Group("/news")

@@ -69,7 +69,7 @@ func (u *newsUC) Update(ctx context.Context, news *models.News) (*models.News, e
 	}
 
 	if err = u.redisRepo.DeleteNewsCtx(ctx, u.getKeyWithPrefix(news.NewsID.String())); err != nil {
-		u.logger.Errorf("newsUC.Update.DeleteNewsCtx: %v", err)
+		u.logger.Errorf(ctx, "newsUC.Update.DeleteNewsCtx: %v", err)
 	}
 
 	return updatedUser, nil
@@ -79,7 +79,7 @@ func (u *newsUC) Update(ctx context.Context, news *models.News) (*models.News, e
 func (u *newsUC) GetNewsByID(ctx context.Context, newsID uuid.UUID) (*models.NewsBase, error) {
 	newsBase, err := u.redisRepo.GetNewsByIDCtx(ctx, u.getKeyWithPrefix(newsID.String()))
 	if err != nil {
-		u.logger.Errorf("newsUC.GetNewsByID.GetNewsByIDCtx: %v", err)
+		u.logger.Errorf(ctx, "newsUC.GetNewsByID.GetNewsByIDCtx: %v", err)
 	}
 	if newsBase != nil {
 		return newsBase, nil
@@ -91,7 +91,7 @@ func (u *newsUC) GetNewsByID(ctx context.Context, newsID uuid.UUID) (*models.New
 	}
 
 	if err = u.redisRepo.SetNewsCtx(ctx, u.getKeyWithPrefix(newsID.String()), cacheDuration, n); err != nil {
-		u.logger.Errorf("newsUC.GetNewsByID.SetNewsCtx: %s", err)
+		u.logger.Errorf(ctx, "newsUC.GetNewsByID.SetNewsCtx: %s", err)
 	}
 
 	return n, nil
@@ -113,7 +113,7 @@ func (u *newsUC) Delete(ctx context.Context, newsID uuid.UUID) error {
 	}
 
 	if err = u.redisRepo.DeleteNewsCtx(ctx, u.getKeyWithPrefix(newsID.String())); err != nil {
-		u.logger.Errorf("newsUC.Delete.DeleteNewsCtx: %v", err)
+		u.logger.Errorf(ctx, "newsUC.Delete.DeleteNewsCtx: %v", err)
 	}
 
 	return nil
@@ -121,7 +121,11 @@ func (u *newsUC) Delete(ctx context.Context, newsID uuid.UUID) error {
 
 // Get news
 func (u *newsUC) GetNews(ctx context.Context, pq *utils.PaginationQuery) (*models.NewsList, error) {
-	return u.newsRepo.GetNews(ctx, pq)
+	results, err := u.newsRepo.GetNews(ctx, pq)
+	if err != nil {
+		u.logger.Error(ctx, err)
+	}
+	return results, err
 }
 
 func (u *newsUC) getKeyWithPrefix(newsID string) string {

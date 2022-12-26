@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"net"
 	"os"
 	"os/signal"
@@ -43,12 +44,13 @@ func (s *Server) Run() error {
 		return err
 	}
 
+	ctx := context.Background()
 	go func() {
-		s.logger.Infof("Server is listening on PORT: %s", s.cfg.Server.Port)
+		s.logger.Infof(ctx, "Server is listening on PORT: %s", s.cfg.Server.Port)
 		ln, _ := net.Listen("tcp", ":"+s.cfg.Server.Port)
 		err := s.fiber.Listener(ln)
 		if err != nil {
-			s.logger.Fatalf("Error starting Server: ", err)
+			s.logger.Fatalf(ctx, "Error starting Server: ", err)
 		}
 	}()
 
@@ -56,6 +58,6 @@ func (s *Server) Run() error {
 	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
 	<-quit
 
-	s.logger.Info("Server Exited Properly")
+	s.logger.Info(ctx, "Server Exited Properly")
 	return s.fiber.Shutdown()
 }

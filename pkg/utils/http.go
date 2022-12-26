@@ -55,6 +55,7 @@ func GetUserFromCtx(ctx context.Context) (*models.User, error) {
 // Error response with logging error for echo context
 func LogResponseError(ctx *fiber.Ctx, logger logger.Logger, err error) {
 	logger.Errorf(
+		ctx.UserContext(),
 		"ErrResponseWithLog, RequestID: %s, IPAddress: %s, Error: %s",
 		GetRequestID(ctx),
 		GetIPAddress(ctx),

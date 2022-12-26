@@ -24,3 +24,19 @@ func BytesToAny(data []byte, v any) error {
 func AnyToBytes(v any) ([]byte, error) {
 	return json.Marshal(v)
 }
+
+// ...
+func MapStringToSlice(maps map[string]any) []any {
+	var results []any
+	for key, value := range maps {
+		results = append(results, key, value)
+	}
+	return results
+}
+
+// ...
+// func ContextToSlice(ctx context.Context) []any {
+// 	for key, value := range ctx {
+// 		fmt.Println(key, value)
+// 	}
+// }

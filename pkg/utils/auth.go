@@ -16,6 +16,7 @@ func ValidateIsOwner(ctx context.Context, creatorID string, logger logger.Logger
 
 	if user.UserID.String() != creatorID {
 		logger.Errorf(
+			ctx,
 			"ValidateIsOwner, userID: %v, creatorID: %v",
 			user.UserID.String(),
 			creatorID,
