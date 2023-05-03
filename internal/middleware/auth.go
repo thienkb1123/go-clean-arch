@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
 	"github.com/thienkb1123/go-clean-arch/config"
@@ -16,21 +16,21 @@ import (
 )
 
 // JWT way of auth using cookie or Authorization header
-func (mw *MiddlewareManager) AuthJWTMiddleware() fiber.Handler {
-	return func(c *fiber.Ctx) error {
-		tokenString := c.Get(fiber.HeaderAuthorization)
-		ctx := c.UserContext()
+func (mw *MiddlewareManager) AuthJWTMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		tokenString := c.GetHeader("Authorization")
+		ctx := c.Request.Context()
 		mw.logger.Infof(ctx, "auth middleware header %s", tokenString)
 		if err := mw.validateJWTToken(tokenString, c, mw.cfg); err != nil {
 			mw.logger.Error(ctx, "middleware validateJWTToken", zap.String("headerJWT", err.Error()))
-			return c.Status(http.StatusUnauthorized).JSON(errors.NewUnauthorizedError(errors.Unauthorized))
+			c.JSON(http.StatusUnauthorized, errors.NewUnauthorizedError(errors.Unauthorized))
+			c.Abort()
 		}
-
-		return c.Next()
+		c.Next()
 	}
 }
 
-func (mw *MiddlewareManager) validateJWTToken(tokenString string, c *fiber.Ctx, cfg *config.Config) error {
+func (mw *MiddlewareManager) validateJWTToken(tokenString string, c *gin.Context, cfg *config.Config) error {
 	if tokenString == "" {
 		return errors.InvalidJWTToken
 	}
@@ -65,8 +65,8 @@ func (mw *MiddlewareManager) validateJWTToken(tokenString string, c *fiber.Ctx, 
 			UserID: userUUID,
 		}
 
-		ctx := context.WithValue(c.UserContext(), utils.UserCtxKey{}, user)
-		c.SetUserContext(ctx)
+		ctx := context.WithValue(c.Request.Context(), utils.UserCtxKey{}, user)
+		c.Request.WithContext(ctx)
 	}
 	return nil
 }

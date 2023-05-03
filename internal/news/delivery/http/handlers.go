@@ -1,15 +1,13 @@
 package http
 
 import (
-	"net/http"
-
-	"github.com/gofiber/fiber/v2"
+	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/thienkb1123/go-clean-arch/config"
 	"github.com/thienkb1123/go-clean-arch/internal/models"
 	"github.com/thienkb1123/go-clean-arch/internal/news"
-	"github.com/thienkb1123/go-clean-arch/pkg/errors"
 	"github.com/thienkb1123/go-clean-arch/pkg/logger"
+	"github.com/thienkb1123/go-clean-arch/pkg/response"
 	"github.com/thienkb1123/go-clean-arch/pkg/utils"
 )
 
@@ -33,23 +31,23 @@ func NewNewsHandlers(cfg *config.Config, newsUC news.UseCase, logger logger.Logg
 // @Produce json
 // @Success 201 {object} models.News
 // @Router /news/create [post]
-func (h newsHandlers) Create(c *fiber.Ctx) error {
+func (h newsHandlers) Create(c *gin.Context) {
 	n := &models.News{}
-	if err := c.BodyParser(n); err != nil {
+	if err := c.Bind(n); err != nil {
 		utils.LogResponseError(c, h.logger, err)
-		status, err := errors.HTTPErrorResponse(err)
-		return c.Status(status).JSON(err)
+		response.WithError(c, err)
+		return
 	}
 
-	ctx := c.UserContext()
+	ctx := c.Request.Context()
 	createdNews, err := h.newsUC.Create(ctx, n)
 	if err != nil {
 		utils.LogResponseError(c, h.logger, err)
-		status, err := errors.HTTPErrorResponse(err)
-		return c.Status(status).JSON(err)
+		response.WithError(c, err)
+		return
 	}
 
-	return c.Status(http.StatusCreated).JSON(createdNews)
+	response.WithOK(c, createdNews)
 }
 
 // Update godoc
@@ -61,31 +59,31 @@ func (h newsHandlers) Create(c *fiber.Ctx) error {
 // @Param id path int true "news_id"
 // @Success 200 {object} models.News
 // @Router /news/{id} [put]
-func (h newsHandlers) Update(c *fiber.Ctx) error {
-	newsUUID, err := uuid.Parse(c.Params("news_id"))
+func (h newsHandlers) Update(c *gin.Context) {
+	newsUUID, err := uuid.Parse(c.Param("newsId"))
 	if err != nil {
 		utils.LogResponseError(c, h.logger, err)
-		status, err := errors.HTTPErrorResponse(err)
-		return c.Status(status).JSON(err)
+		response.WithError(c, err)
+		return
 	}
 
 	n := &models.News{}
-	if err = c.BodyParser(n); err != nil {
+	if err = c.Bind(n); err != nil {
 		utils.LogResponseError(c, h.logger, err)
-		status, err := errors.HTTPErrorResponse(err)
-		return c.Status(status).JSON(err)
+		response.WithError(c, err)
+		return
 	}
 	n.NewsID = newsUUID
 
-	ctx := c.Context()
+	ctx := c.Request.Context()
 	updatedNews, err := h.newsUC.Update(ctx, n)
 	if err != nil {
 		utils.LogResponseError(c, h.logger, err)
-		status, err := errors.HTTPErrorResponse(err)
-		return c.Status(status).JSON(err)
+		response.WithError(c, err)
+		return
 	}
 
-	return c.Status(http.StatusOK).JSON(updatedNews)
+	response.WithOK(c, updatedNews)
 }
 
 // GetByID godoc
@@ -97,23 +95,23 @@ func (h newsHandlers) Update(c *fiber.Ctx) error {
 // @Param id path int true "news_id"
 // @Success 200 {object} models.News
 // @Router /news/{id} [get]
-func (h newsHandlers) GetByID(c *fiber.Ctx) error {
-	newsUUID, err := uuid.Parse(c.Params("news_id"))
+func (h newsHandlers) GetByID(c *gin.Context) {
+	newsUUID, err := uuid.Parse(c.Param("newsId"))
 	if err != nil {
 		utils.LogResponseError(c, h.logger, err)
-		status, err := errors.HTTPErrorResponse(err)
-		return c.Status(status).JSON(err)
+		response.WithError(c, err)
+		return
 	}
 
-	ctx := c.UserContext()
+	ctx := c.Request.Context()
 	newsByID, err := h.newsUC.GetNewsByID(ctx, newsUUID)
 	if err != nil {
 		utils.LogResponseError(c, h.logger, err)
-		status, err := errors.HTTPErrorResponse(err)
-		return c.Status(status).JSON(err)
+		response.WithError(c, err)
+		return
 	}
 
-	return c.Status(http.StatusOK).JSON(newsByID)
+	response.WithOK(c, newsByID)
 }
 
 // Delete godoc
@@ -125,22 +123,22 @@ func (h newsHandlers) GetByID(c *fiber.Ctx) error {
 // @Param id path int true "news_id"
 // @Success 200 {string} string	"ok"
 // @Router /news/{id} [delete]
-func (h newsHandlers) Delete(c *fiber.Ctx) error {
-	newsUUID, err := uuid.Parse(c.Params("news_id"))
+func (h newsHandlers) Delete(c *gin.Context) {
+	newsUUID, err := uuid.Parse(c.Param("newsId"))
 	if err != nil {
 		utils.LogResponseError(c, h.logger, err)
-		status, err := errors.HTTPErrorResponse(err)
-		return c.Status(status).JSON(err)
+		response.WithError(c, err)
+		return
 	}
 
-	ctx := c.Context()
+	ctx := c.Request.Context()
 	if err = h.newsUC.Delete(ctx, newsUUID); err != nil {
 		utils.LogResponseError(c, h.logger, err)
-		status, err := errors.HTTPErrorResponse(err)
-		return c.Status(status).JSON(err)
+		response.WithError(c, err)
+		return
 	}
 
-	return c.SendStatus(http.StatusNoContent)
+	response.WithNoContent(c)
 }
 
 // GetNews godoc
@@ -154,21 +152,21 @@ func (h newsHandlers) Delete(c *fiber.Ctx) error {
 // @Param orderBy query int false "filter name" Format(orderBy)
 // @Success 200 {object} models.NewsList
 // @Router /news [get]
-func (h newsHandlers) GetNews(c *fiber.Ctx) error {
+func (h newsHandlers) GetNews(c *gin.Context) {
 	pq, err := utils.GetPaginationFromCtx(c)
 	if err != nil {
 		utils.LogResponseError(c, h.logger, err)
-		status, err := errors.HTTPErrorResponse(err)
-		return c.Status(status).JSON(err)
+		response.WithError(c, err)
+		return
 	}
 
-	ctx := c.UserContext()
+	ctx := c.Request.Context()
 	newsList, err := h.newsUC.GetNews(ctx, pq)
 	if err != nil {
 		utils.LogResponseError(c, h.logger, err)
-		status, err := errors.HTTPErrorResponse(err)
-		return c.Status(status).JSON(err)
+		response.WithError(c, err)
+		return
 	}
 
-	return c.Status(http.StatusOK).JSON(newsList)
+	response.WithOK(c, newsList)
 }

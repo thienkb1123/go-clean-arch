@@ -7,7 +7,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gin-gonic/gin"
 	"github.com/thienkb1123/go-clean-arch/config"
 	"github.com/thienkb1123/go-clean-arch/pkg/cache/redis"
 	"github.com/thienkb1123/go-clean-arch/pkg/logger"
@@ -16,7 +16,7 @@ import (
 
 // Server struct
 type Server struct {
-	fiber  *fiber.App
+	gin    *gin.Engine
 	cfg    *config.Config
 	db     *gorm.DB
 	redis  redis.Client
@@ -26,9 +26,9 @@ type Server struct {
 // NewServer New Server constructor
 func NewServer(cfg *config.Config, db *gorm.DB, opts ...Option) *Server {
 	s := &Server{
-		fiber: fiber.New(),
-		cfg:   cfg,
-		db:    db,
+		gin: gin.New(),
+		cfg: cfg,
+		db:  db,
 	}
 
 	// Custom options
@@ -48,7 +48,7 @@ func (s *Server) Run() error {
 	go func() {
 		s.logger.Infof(ctx, "Server is listening on PORT: %s", s.cfg.Server.Port)
 		ln, _ := net.Listen("tcp", ":"+s.cfg.Server.Port)
-		err := s.fiber.Listener(ln)
+		err := s.gin.RunListener(ln)
 		if err != nil {
 			s.logger.Fatalf(ctx, "Error starting Server: ", err)
 		}
@@ -59,5 +59,5 @@ func (s *Server) Run() error {
 	<-quit
 
 	s.logger.Info(ctx, "Server Exited Properly")
-	return s.fiber.Shutdown()
+	return nil
 }

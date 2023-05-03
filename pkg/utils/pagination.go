@@ -5,7 +5,7 @@ import (
 	"math"
 	"strconv"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gin-gonic/gin"
 )
 
 const (
@@ -87,7 +87,7 @@ func (q *PaginationQuery) GetQueryString() string {
 }
 
 // Get pagination query struct from
-func GetPaginationFromCtx(c *fiber.Ctx) (*PaginationQuery, error) {
+func GetPaginationFromCtx(c *gin.Context) (*PaginationQuery, error) {
 	q := &PaginationQuery{}
 	if err := q.SetPage(c.Query("page")); err != nil {
 		return nil, err

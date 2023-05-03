@@ -3,7 +3,7 @@ package server
 import (
 	"context"
 
-	"github.com/gofiber/fiber/v2/middleware/requestid"
+	"github.com/gin-contrib/requestid"
 	apiMiddlewares "github.com/thienkb1123/go-clean-arch/internal/middleware"
 	newsHttp "github.com/thienkb1123/go-clean-arch/internal/news/delivery/http"
 	newsRepository "github.com/thienkb1123/go-clean-arch/internal/news/repository"
@@ -39,11 +39,11 @@ func (s *Server) MapHandlers() error {
 
 	mw := apiMiddlewares.NewMiddlewareManager(s.cfg, []string{"*"}, s.logger)
 
-	s.fiber.Use(requestid.New())
-	s.fiber.Use(mw.MetricsMiddleware(metrics))
-	s.fiber.Use(mw.LoggerMiddleware(s.logger))
+	s.gin.Use(requestid.New())
+	s.gin.Use(mw.MetricsMiddleware(metrics))
+	s.gin.Use(mw.LoggerMiddleware(s.logger))
 
-	v1 := s.fiber.Group("/api/v1")
+	v1 := s.gin.Group("/api/v1")
 	newsGroup := v1.Group("/news")
 
 	newsHttp.MapNewsRoutes(newsGroup, newsHandlers, mw)

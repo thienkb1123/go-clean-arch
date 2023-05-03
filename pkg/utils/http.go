@@ -6,8 +6,9 @@ import (
 	"io/ioutil"
 	"time"
 
+	"github.com/gin-contrib/requestid"
 	"github.com/gin-gonic/gin"
-	"github.com/gofiber/fiber/v2"
+
 	"github.com/thienkb1123/go-clean-arch/internal/models"
 	"github.com/thienkb1123/go-clean-arch/pkg/errors"
 	"github.com/thienkb1123/go-clean-arch/pkg/logger"
@@ -15,31 +16,31 @@ import (
 )
 
 // Get request id from gin context
-func GetRequestID(c *fiber.Ctx) string {
-	return c.GetRespHeader(fiber.HeaderXRequestID)
+func GetRequestID(c *gin.Context) string {
+	return requestid.Get(c)
 }
 
 // ReqIDCtxKey is a key used for the Request ID in context
 type ReqIDCtxKey struct{}
 
 // Get ctx with timeout and request id from echo context
-func GetCtxWithReqID(c *fiber.Ctx) (context.Context, context.CancelFunc) {
-	ctx, cancel := context.WithTimeout(c.Context(), time.Second*15)
+func GetCtxWithReqID(c *gin.Context) (context.Context, context.CancelFunc) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), time.Second*15)
 	ctx = context.WithValue(ctx, ReqIDCtxKey{}, GetRequestID(c))
 	return ctx, cancel
 }
 
 // Get context  with request id
-func GetRequestCtx(c *fiber.Ctx) context.Context {
-	return context.WithValue(c.Context(), ReqIDCtxKey{}, GetRequestID(c))
+func GetRequestCtx(c *gin.Context) context.Context {
+	return context.WithValue(c.Request.Context(), ReqIDCtxKey{}, GetRequestID(c))
 }
 
 // UserCtxKey is a key used for the User object in the context
 type UserCtxKey struct{}
 
 // Get user ip address
-func GetIPAddress(c *fiber.Ctx) string {
-	return c.IP()
+func GetIPAddress(c *gin.Context) string {
+	return c.ClientIP()
 }
 
 // Get user from context
@@ -53,12 +54,12 @@ func GetUserFromCtx(ctx context.Context) (*models.User, error) {
 }
 
 // Error response with logging error for echo context
-func LogResponseError(ctx *fiber.Ctx, logger logger.Logger, err error) {
+func LogResponseError(c *gin.Context, logger logger.Logger, err error) {
 	logger.Errorf(
-		ctx.UserContext(),
+		c.Request.Context(),
 		"ErrResponseWithLog, RequestID: %s, IPAddress: %s, Error: %s",
-		GetRequestID(ctx),
-		GetIPAddress(ctx),
+		GetRequestID(c),
+		GetIPAddress(c),
 		err,
 	)
 }

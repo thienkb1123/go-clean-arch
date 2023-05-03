@@ -1,7 +1,7 @@
 package server
 
 import (
-	"github.com/gofiber/fiber/v2"
+	"github.com/gin-gonic/gin"
 	"github.com/thienkb1123/go-clean-arch/pkg/cache/redis"
 	"github.com/thienkb1123/go-clean-arch/pkg/logger"
 )
@@ -9,9 +9,9 @@ import (
 // Option -.
 type Option func(*Server)
 
-func FiberEngine(fiber *fiber.App) Option {
+func FiberEngine(gin *gin.Engine) Option {
 	return func(s *Server) {
-		s.fiber = fiber
+		s.gin = gin
 	}
 }
 
